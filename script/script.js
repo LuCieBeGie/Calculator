@@ -12,6 +12,7 @@ const backspaceButton = document.querySelector('[data-backspace]');
 let currentValue = '';
 let storedValue = '';
 let currentAction = '';
+let resultDisplayed = false;
 
 function add(a, b) {
     return a + b
@@ -51,10 +52,23 @@ function screenUpdate() {
     screen.value = currentValue
 }
 
+function checkMaxLength() {
+    let maxLength = 10
+    if (currentValue.length > maxLength) {
+        currentValue = currentValue.slice(0, maxLength)
+        alert('Maximum length is reached')
+    }
+}
+
 numberButtons.forEach((button) => {
     button.addEventListener('click', function () {
+        if (resultDisplayed) {
+            currentValue = '';
+            resultDisplayed = false;
+        }
         if (screen.value === 'ERROR!') {
-            return;
+            screen.value = '';
+            currentValue = '';
         }
         if (button.value === '.') {
             if (!currentValue.includes('.')) {
@@ -71,29 +85,28 @@ numberButtons.forEach((button) => {
         checkMaxLength();
         screenUpdate();
     })
-})
+});
 
 actionButtons.forEach((el) => {
     el.addEventListener('click', function () {
-        if (currentValue === '' && screen.value !== 'ERROR!') {
+        if (currentValue === '' && storedValue !== '' && currentAction !== '') {
+            currentAction = el.value;
+            console.log(currentAction);
             return;
         }
-        if (storedValue !== '' && currentAction !== '') {
+        if (storedValue !== '') {
             currentValue = doAction(
                 currentAction,
                 parseFloat(storedValue),
                 parseFloat(currentValue)
-            ).toString();
-            storedValue = currentValue;
-            screenUpdate();
-        } else {
-            storedValue = currentValue;
+            );
             screenUpdate();
         }
         currentAction = el.value;
+        storedValue = currentValue;
         currentValue = '';
-    })
-})
+    });
+});
 
 clear_all.addEventListener('click', function () {
     currentValue = ''
@@ -121,20 +134,41 @@ equalButton.addEventListener('click', function () {
         parseFloat(currentValue)
     ).toString()
     screenUpdate()
-    storedValue = currentValue
     currentAction = ''
-})
+    storedValue = currentValue
+    resultDisplayed = true;
+});
 
 changeColorButton.onclick = function () {
     calculatorTable.classList.toggle('calculator-table-dark')
     body.classList.toggle('body_dark')
 }
 
-function checkMaxLength() {
-    const maxLength = 10;
-
-    if(currentValue.length > maxLength) {
-        currentValue = currentValue.slice(0, maxLength);
-        alert('Maximum Input Length reached');
+document.addEventListener("keyup", function (e) {
+    switch (e.which) {
+        case 8:
+            backspaceButton.click()
+            break;
+        case 46:
+            clear_all.click()
+            break
+        case 13:
+            equalButton.click();
+        default:
+            break;
     }
-}
+    if (e.which !== 13) {
+        for (let i = 0; i < numberButtons.length; i++) {
+            let id = numberButtons[i].getAttribute("value");
+            if (id == e.key) {
+                numberButtons[i].click();
+            }
+        }
+        for (let i = 0; i < actionButtons.length; i++) {
+            let id = actionButtons[i].getAttribute("value");
+            if (id == e.key) {
+                actionButtons[i].click();
+            }
+        }
+    }
+}, false);
